@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
         "fmt"
 	"io"
         "log"
 	"net/http"
+	"net/url"
         "os"
         "os/user"
+        "strings"
 
         "gopkg.in/yaml.v2"
 	"github.com/spf13/cobra"
@@ -27,13 +30,66 @@ func Execute() {
 	}
 }
 
-// -------------- STRUCTS -------------- //
 
+// ------------------ ~/.larder/config.yml ------------------ //
+// ---------------------------------------------------------- //
 type Config struct {
     AccessToken string `yaml:"access_token"`
     RefreshToken string `yaml:"refresh_token"`
     ClientID string `yaml:"client_id"`
     ClientSecret string `yaml:"client_secret"`
+}
+
+func readFile(filename string) *os.File {
+    file, err := os.Open(filename)
+    if err != nil {
+        processError(err)
+        var tmp *os.File
+        return tmp
+    }
+    return file
+}
+
+func parseYaml(cfg *Config, file *os.File) bool {
+    decoder:= yaml.NewDecoder(file)
+    err := decoder.Decode(cfg)
+    if err != nil {
+        processError(err)
+        return false
+    }
+    return true
+}
+
+func getYaml(filename string) Config {
+    var cfg Config
+    yamlFile := readFile(filename)
+    success := parseYaml(&cfg, yamlFile)
+    if success == false {
+        log.Fatal("Failed to read file.")
+    }
+    return cfg
+}
+
+func pathToConfig() string {
+    usr, err := user.Current()
+    if err != nil {
+        log.Fatal(err)
+    }
+    return usr.HomeDir + "/.larder/config.yml"
+}
+
+func processError(err error) {
+    fmt.Println(err)
+    os.Exit(2)
+}
+
+// ------------------ SHARED STRUCTS ------------------ //
+// ---------------------------------------------------- //
+type Bookmark struct {
+        Parent string `json:"parent"`
+        Title string `json:"title"`
+        URL string `json:"url"`
+        Tags []Tags `json:"tags"`
 }
 
 type FolderAPIResponse struct {
@@ -82,8 +138,10 @@ type Tags struct {
     Modified string `json:"modified"`
 }
 
-// -------------- SHARED METHODS -------------- //
-func getResponse(link string) io.ReadCloser {
+
+// ------------------ SHARED GET METHODS ------------------ //
+// -------------------------------------------------------- //
+func makeGetRequest(link string) io.ReadCloser {
             client := &http.Client{}
             req, _ := http.NewRequest("GET", link, nil)
             token := getAccessToken()
@@ -91,8 +149,6 @@ func getResponse(link string) io.ReadCloser {
             res, _ := client.Do(req)
             return res.Body
 }
-
-func postResponse(blob io.ReadCloser) {}
 
 func getFolders(blob io.ReadCloser) FolderAPIResponse {
             decoder := json.NewDecoder(blob)
@@ -114,49 +170,46 @@ func getFolderContents(blob io.ReadCloser) FolderContentAPIResponse {
             return fc
 }
 
-func processError(err error) {
-    fmt.Println(err)
-    os.Exit(2)
+func getFolderID(folder string, folders []Folders) string {
+        folderName := strings.ToLower(folder)
+        var id string
+        for _, folder := range folders {
+            currentFolder := strings.ToLower(folder.Name)
+            if currentFolder == folderName {
+                id = folder.ID
+                break
+            }
+        }
+        return id
 }
 
-func readFile(filename string) *os.File {
-    file, err := os.Open(filename)
-    if err != nil {
-        processError(err)
-        var tmp *os.File
-        return tmp
-    }
-    return file
+
+// ------------------ SHARED POST METHODS ------------------ //
+// --------------------------------------------------------- //
+func makePostRequest(link string, data *bytes.Buffer) {
+        client := &http.Client{}
+        req, _ := http.NewRequest("POST", link, data)
+        token := getAccessToken()
+        req.Header.Set("Authorization", "Bearer " + token)
+        req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+        _, clientErr := client.Do(req)
+        if clientErr != nil {
+            processError(clientErr)
+        }
 }
 
-func parseYaml(cfg *Config, file *os.File) bool {
-    decoder:= yaml.NewDecoder(file)
-    err := decoder.Decode(cfg)
-    if err != nil {
-        processError(err)
-        return false
-    }
-    return true
+func setPostData(bookmark Bookmark) *bytes.Buffer {
+        data := url.Values{}
+        data.Set("parent", bookmark.Parent)
+        data.Set("title", bookmark.Title)
+        data.Set("url", bookmark.URL)
+        data.Set("tags", "[]")
+        return bytes.NewBufferString(data.Encode())
 }
 
-func getYaml(filename string) Config {
-    var cfg Config
-    yamlFile := readFile(filename)
-    success := parseYaml(&cfg, yamlFile)
-    if success == false {
-        log.Fatal("Failed to read file.")
-    }
-    return cfg
-}
 
-func pathToConfig() string {
-    usr, err := user.Current()
-    if err != nil {
-        log.Fatal(err)
-    }
-    return usr.HomeDir + "/.larder/config.yml"
-}
-
+// ------------------ SHARED ACCESS METHODS ------------------ //
+// ----------------------------------------------------------- //
 func getAccessToken() string {
     var cfg = getYaml(pathToConfig())
     return cfg.AccessToken
