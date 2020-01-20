@@ -92,6 +92,8 @@ func getResponse(link string) io.ReadCloser {
             return res.Body
 }
 
+func postResponse(blob io.ReadCloser) {}
+
 func getFolders(blob io.ReadCloser) FolderAPIResponse {
             decoder := json.NewDecoder(blob)
             var f FolderAPIResponse
