@@ -1,10 +1,12 @@
 package cmd
 
 import (
+    "bufio"
     "bytes"
     "fmt"
     "net/url"
     "os"
+    "strings"
 
     "github.com/spf13/cobra"
 )
@@ -92,6 +94,7 @@ func addBookmark(link string, folder string) {
     code := makePostRequest("https://larder.io/api/1/@me/links/add/", setBookmarkPostData(b))
     if checkSuccess(code, 201) {
         fmt.Println("Bookmark added!")
+        os.Exit(0)
     }
     os.Exit(2)
 }
@@ -105,6 +108,7 @@ func deleteBookmark(id string, folder string, folders []Folders) {
     code := makePostRequest("https://larder.io/api/1/@me/links/" + id + "/delete/", setBookmarkPostData(b))
     if checkSuccess(code, 204) {
         fmt.Println("Bookmark deleted!")
+        os.Exit(0)
     }
     os.Exit(2)
 }
@@ -112,14 +116,29 @@ func deleteBookmark(id string, folder string, folders []Folders) {
 // ------------------ COMMAND HELPER FUNCTIONS ------------------ //
 // -------------------------------------------------------------- //
 func getBookmarkInfo(b Bookmark, link string, folder string, folders []Folders) Bookmark {
+    reader := bufio.NewReader(os.Stdin)
     fmt.Print("Enter title of bookmark: ")
-    fmt.Scanln(&b.Title)
+    b.Title, _ = reader.ReadString('\n')
+    fmt.Print("Enter tags for bookmark: ")
+    slice, _ := reader.ReadString('\n')
+    b = setTags(b, slice)
     b.Parent.ID = getFolderID(folder, folders)
     b.URL = link
     if b.URL == "" {
         fmt.Println("No link was supplied.")
         os.Exit(2)
     }
+    return b
+}
+
+func setTags(b Bookmark, slice string) Bookmark{
+    var ts []Tags
+    var t Tags
+    for _, s := range strings.Split(slice, ",") {
+        t.Name = strings.TrimSuffix(s, "\n")
+        ts = append(ts, t)
+    }
+    b.Tags = ts
     return b
 }
 
@@ -137,6 +156,8 @@ func setBookmarkPostData(bookmark Bookmark) *bytes.Buffer {
     data.Set("title", bookmark.Title)
     data.Set("url", bookmark.URL)
     data.Set("parent", bookmark.Parent.ID)
-    data.Set("tags", "[]")
+    for _, t := range bookmark.Tags {
+        data.Add("tags", t.Name)
+    }
     return bytes.NewBufferString(data.Encode())
 }
