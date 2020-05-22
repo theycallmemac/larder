@@ -24,6 +24,7 @@ func init() {
 
 var FolderCmd = &cobra.Command {
     Use:   "folder",
+    Aliases: []string{"fl"},
     Short: "interact with folders",
     Long:  `This subcommand will allow the user to interact with folders`,
     Run: func(cmd *cobra.Command, args []string) {

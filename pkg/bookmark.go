@@ -25,6 +25,7 @@ func init() {
 
 var BookmarkCmd = &cobra.Command {
     Use:   "bookmark",
+    Aliases: []string{"bk"},
     Short: "interact with bookmarks",
     Long:  `This subcommand will allow the user to interact with bookmarks`,
     Run: func(cmd *cobra.Command, args []string) {

@@ -18,6 +18,7 @@ func init() {
 
 var SearchCmd = &cobra.Command {
     Use:   "search",
+    Aliases: []string{"se"},
     Short: "search through bookmarks",
     Long:  `This subcommand will allow the user to search through bookmarks`,
     Run: func(cmd *cobra.Command, args []string) {
