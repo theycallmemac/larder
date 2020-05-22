@@ -16,16 +16,16 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-    Use:   "larder-cli",
-    Short: "a cli to your bookmarks",
-    Long: `a cli to your bookmarks`,
+    Use:   "larder",
+    Short: "A CLI to your bookmarks",
+    Long: `A CLI to your bookmarks`,
 }
 
 
 func Execute() {
     if err := RootCmd.Execute(); err != nil {
-            fmt.Println(err)
-            os.Exit(1)
+        fmt.Println(err)
+        os.Exit(1)
     }
 }
 

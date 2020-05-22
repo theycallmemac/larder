@@ -1,7 +1,7 @@
 package main
 
 import (
-    larder "../../pkg"//"github.com/theycallmemac/larder/pkg"
+    larder "github.com/theycallmemac/larder/pkg"
 )
 
 func main() {
