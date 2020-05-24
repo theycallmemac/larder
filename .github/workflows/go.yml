@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Set up Go 1.x
+    - name: Set up Go 1.13
       uses: actions/setup-go@v2
       with:
         go-version: ^1.13
@@ -30,8 +30,5 @@ jobs:
             dep ensure
         fi
 
-    - name: Build
-      run: go build -v .
-
-    - name: Test
-      run: go test -v .
+    - name: Build Larder CLI
+      run: go build -o larder -v ./cmd/larder/
