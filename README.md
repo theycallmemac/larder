@@ -1,16 +1,17 @@
-# larder
+# 📚 larder
 
-A CLI for Larder - for people who don't like browser extensions!
+A [Larder.io](https://larder.io) command line interface - for all us people who don't like browser extensions!
 
+## 🔧 Build
 
-### Creating a Larder Client
+#### Creating a Larder Client
 
 Before installing the Larder CLI, you need to go to the [Larder app management page](https://larder.io/apps/clients/). You might have to log in first.
 
 You need to create a new Client. It's pretty standard, nothing that will catch you off-guard, just fill out the form to create the Oauth2 Client. 
 
 
-### Larder Config
+#### Larder Config
 
 Once you've created your client, you can head to that clients information page and fetch the following tokens:
 - `access_token`
@@ -28,18 +29,15 @@ client_secret: $YOUR_CLIENT_SECRET
 ```
 
 
-### Build
-
 Once you've stored your client information in `~/.larder/config.yml`, you are ready to build the CLI. To build, run `make install` in the top level of this repository. Requires sudo or root permissions.
 
-### Run
+
+
+## 🚀 Usage
 
 You can run the Larder CLI from anywhere by running the `larder` command
 
 You can checkout the available commands with `larder --help`.
-
-
-### Usage
 
 #### Help
 
@@ -115,3 +113,15 @@ The `-p` / `--params` flag is a bt vague here. The user provides a string of sea
 Tokens expire in a month and can be refreshed for a new access token at any time, invalidating the original access and refresh tokens.
 
 Tokens can be automatically refreshed by running `larder refresh-token`. 
+
+## 👤 Author
+
+**James McDermott**
+
+- Email: <james.mcdermott7@mail.dcu.ie>
+- Twitter: [@theycallmemac_](https://twitter.com/theycallmemac_)
+- Github: [@theycallmemac](https://github.com/theycallmemac)
+
+## ⭐️ Show your support
+
+Give a ⭐️ if this project helped you!
